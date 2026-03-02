@@ -11,7 +11,7 @@ Understand the difference between a dev server and production static files, and 
 <h4>Context</h4>
 
 The back-end API is running on the VM. You will add a front-end that connects to it.
-First you will run it locally with a dev server, then build and deploy a production version served by `Caddy`.
+First you will run it locally with a dev server, then build and deploy a production version served by [`Caddy`](../../../wiki/caddy.md#what-is-caddy).
 Finally, you will use an AI agent to add a new feature to the front-end.
 
 <h4>Table of contents</h4>
@@ -44,6 +44,10 @@ Title: `[Task] Add Front-end`
 
 ### 1.3. Part A: Dev version
 
+<!-- no toc -->
+- [1.3.1. Run the dev server](#131-run-the-dev-server)
+- [1.3.2. Edit a source file and observe hot reload](#132-edit-a-source-file-and-observe-hot-reload)
+
 > [!NOTE]
 > A dev server serves the front-end with hot reload: the browser updates automatically when you save a file.
 > This is for local development only — it is not meant to be deployed to production.
@@ -63,7 +67,7 @@ Title: `[Task] Add Front-end`
    cd frontend
    ```
 
-3. Configure the environment. Complete the following steps:
+3. Configure the environment. Complete these steps:
 
    1. Open the file [`frontend/.env.example`](../../../frontend/.env.example) ([how to open a file](../../../wiki/vs-code.md#open-the-file)).
    2. Copy it to `frontend/.env`.
@@ -90,24 +94,29 @@ Title: `[Task] Add Front-end`
    npm run dev
    ```
 
-6. Open the URL shown in the terminal output in a browser.
-
    The output should be similar to this:
 
    ```terminal
    Local: http://localhost:5173/
    ```
 
-7. Verify that the front-end loads and displays data from the API.
+6. Open the URL shown in the terminal output in a browser.
+
+   Verify that the front-end loads and displays data from the API.
 
 #### 1.3.2. Edit a source file and observe hot reload
 
 1. Open the file [`frontend/src/App.tsx`](../../../frontend/src/App.tsx) ([how to open a file](../../../wiki/vs-code.md#open-the-file)).
 2. Make a small visible change, for example change a heading text.
 3. Save the file.
-4. Observe that the browser updates automatically without a page refresh.
+
+   Observe that the browser updates automatically without a page refresh.
 
 ### 1.4. Part B: Prod version
+
+<!-- no toc -->
+- [1.4.1. Deploy the front-end to the VM](#141-deploy-the-front-end-to-the-vm)
+- [1.4.2. Verify in the browser](#142-verify-in-the-browser)
 
 > [!NOTE]
 > A production build compiles the front-end into static [`HTML`](../../../wiki/web-development.md#html), [`CSS`](../../../wiki/web-development.md#css), and [`JavaScript`](../../../wiki/web-development.md#javascript) files.
@@ -141,6 +150,20 @@ Title: `[Task] Add Front-end`
    docker compose --env-file .env.docker.secret up --build caddy -d
    ```
 
+   You should see the `caddy` container being rebuilt and started.
+
+   <details><summary>Troubleshooting</summary>
+
+   <h4>Container build fails</h4>
+
+   Check that the `frontend/` directory exists and contains a valid `Dockerfile`.
+
+   <h4>Port conflict (<code>port is already allocated</code>)</h4>
+
+   Stop the process that uses the port, then retry.
+
+   </details>
+
 > [!NOTE]
 > The `caddy` service uses a multi-stage `Dockerfile` ([`frontend/Dockerfile`](../../../frontend/Dockerfile)).
 > Stage 1 builds the front-end (`npm run build`), and stage 2 copies the output into the `Caddy` image.
@@ -155,9 +178,14 @@ Title: `[Task] Add Front-end`
    - [`<your-vm-ip-address>`](../../../wiki/vm.md#your-vm-ip-address)
    - [`<caddy-port>`](../../../wiki/caddy.md#caddy-port)
 
-2. Verify that the front-end loads and displays data from the API.
+   Verify that the front-end loads and displays data from the API.
 
 ### 1.5. Part C: Modify the front-end with an AI agent
+
+<!-- no toc -->
+- [1.5.1. Add a `description` column](#151-add-a-description-column)
+- [1.5.2. Verify in the dev server](#152-verify-in-the-dev-server)
+- [1.5.3. Deploy the change to the VM](#153-deploy-the-change-to-the-vm)
 
 > [!NOTE]
 > The AI agent can read all front-end source files and find the right component to modify.
@@ -187,7 +215,8 @@ Method 2:
 
 1. Check that the dev server is still running (or restart it with `npm run dev`).
 2. Open the front-end in the browser.
-3. Verify that the new column appears in the table.
+
+   Verify that the new column appears in the table.
 
 > [!NOTE]
 > The dev server picks up the changes automatically — no rebuild is needed.
@@ -230,6 +259,20 @@ Method 2:
    docker compose --env-file .env.docker.secret up --build caddy -d
    ```
 
+   You should see the `caddy` container being rebuilt and started.
+
+   <details><summary>Troubleshooting</summary>
+
+   <h4>Container build fails</h4>
+
+   Check that your changes are committed and pushed, and that you checked out the correct branch.
+
+   <h4>Port conflict (<code>port is already allocated</code>)</h4>
+
+   Stop the process that uses the port, then retry.
+
+   </details>
+
 7. Open in the browser: `http://<your-vm-ip-address>:<caddy-port>`.
 
    Replace:
@@ -237,7 +280,7 @@ Method 2:
    - [`<your-vm-ip-address>`](../../../wiki/vm.md#your-vm-ip-address)
    - [`<caddy-port>`](../../../wiki/caddy.md#caddy-port)
 
-8. Verify the new column appears in the production build.
+   Verify the new column appears in the production build.
 
 ### 1.6. Finish the task
 
