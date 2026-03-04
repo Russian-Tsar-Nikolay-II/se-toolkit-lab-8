@@ -24,6 +24,7 @@
   - [12.18. Multi-bug debugging tasks](#1218-multi-bug-debugging-tasks)
   - [12.19. Step checkpoints](#1219-step-checkpoints)
   - [12.20. Recovery guidance](#1220-recovery-guidance)
+  - [12.21. Controlled task environment](#1221-controlled-task-environment)
 - [13. Conceptual review dimensions](#13-conceptual-review-dimensions)
   - [D1. Learning objective clarity](#d1-learning-objective-clarity)
   - [D2. Step-by-step completeness](#d2-step-by-step-completeness)
@@ -35,6 +36,7 @@
   - [D8. LLM-independence](#d8-llm-independence)
   - [D9. Git workflow coherence](#d9-git-workflow-coherence)
   - [D10. Conceptual gaps and misconceptions](#d10-conceptual-gaps-and-misconceptions)
+  - [D11. Controlled AI steps](#d11-controlled-ai-steps)
 - [15. Testing pattern](#15-testing-pattern)
 - [17. Checklist before publishing](#17-checklist-before-publishing)
 
@@ -437,6 +439,18 @@ Bad:
 4. Ask the TA if something doesn't work.
 ~~~
 
+### 12.21. Controlled task environment
+
+Every task must produce predictable, repeatable outcomes for all students — regardless of their setup, skill level, or tool choices. Instructions must eliminate free variables: specify exact files, commands, values, and expected outputs. Leave nothing to interpretation.
+
+This principle extends to AI-assisted steps. When a task requires students to use an AI tool (e.g., generate code, write a prompt, analyze output), the step must constrain the AI interaction precisely enough that the result is reproducible:
+
+- Provide the exact prompt to use, or a template with clearly marked `<placeholders>`.
+- Specify what the AI output should contain or how to verify it (see [12.19. Step checkpoints](#1219-step-checkpoints)).
+- If AI output varies, require students to adapt it to a concrete acceptance criterion rather than produce "something reasonable."
+
+Together with [step checkpoints](#1219-step-checkpoints), a controlled environment guarantees that every student who follows the instructions reaches the same verified state at the end of each step — making lab completion predictable and reviewer-verifiable.
+
 ---
 
 ## 13. Conceptual review dimensions
@@ -508,6 +522,14 @@ For each problem found, record: the dimension, the line number(s) or section, a 
 - Does the task ask students to do something without explaining why (missing `> [!NOTE]` where the reasoning isn't obvious)?
 - Could any step lead a student to form a wrong mental model (e.g., always deleting and recreating containers instead of understanding state)?
 - Does the task introduce a concept without any reference to learn more (wiki link, note, or pointer)?
+
+### D11. Controlled AI steps
+
+When a task includes AI-assisted steps:
+
+- Is the prompt exact or templated with `<placeholders>`? (Not "ask AI to help you" but "use this prompt:")
+- Is there a checkpoint specifying what correct AI output looks like or how to verify it?
+- If AI output is variable, is there a concrete acceptance criterion the student must satisfy regardless of what the AI produced?
 
 ---
 
