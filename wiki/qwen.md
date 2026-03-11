@@ -159,3 +159,12 @@ Example: `@main.py`.
 
    See [Refer to a file](#refer-to-a-file).
 5. Press `Enter`.
+
+<!-- TODO qwen on VM -->
+<!-- 
+
+#### Install nodejs on the VM
+
+- scp ~/.qwen/oauth_creds.json se-toolkit-vm:~/.qwen/oauth_creds.json
+- nix profile add nixpkgs#nodejs_25
+ -->

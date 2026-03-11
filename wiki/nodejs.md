@@ -129,6 +129,9 @@ Docs:
    v25.7.0
    ```
 
+<!-- TODO pnpm -->
+<!-- TODO install npm with nix because when installing on the VM using nvm libatomic is missing -->
+
 ## `npm`
 
 `npm` is the default package manager for [`Node.js`](#what-is-nodejs).
