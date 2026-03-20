@@ -33,7 +33,7 @@
   - [`LMS_API_HOST_ADDRESS`](#lms_api_host_address)
   - [`LMS_API_HOST_PORT`](#lms_api_host_port)
   - [`LMS_API_KEY`](#lms_api_key)
-- [`autochecker`](#autochecker)
+- [`Autochecker` API](#autochecker-api)
   - [`AUTOCHECKER_API_URL`](#autochecker_api_url)
   - [`AUTOCHECKER_API_LOGIN`](#autochecker_api_login)
   - [`AUTOCHECKER_API_PASSWORD`](#autochecker_api_password)
@@ -233,7 +233,7 @@ The [LMS API key](./lms-api.md#lms-api-key).
 
 Default: `my-secret-api-key`
 
-## `autochecker`
+## `Autochecker` API
 
 Variables for the [autochecker](./autochecker.md#what-is-the-autochecker) ETL pipeline.
 
