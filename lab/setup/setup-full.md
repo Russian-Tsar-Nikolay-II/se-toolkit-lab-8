@@ -178,7 +178,7 @@ See [tools](../../wiki/software-types.md#tool).
 #### 1.6.1. (UPD) Copy your fork URL
 
 1. [Go to your fork](#133-upd-go-to-your-fork).
-2. Copy [`<your-fork-url>`](../../wiki/github.md#your-fork-url).
+2. Copy [`<your-fork-url>`](../../wiki/github.md#your-fork-url-placeholder).
 
    It should look like `https://github.com/<your-github-username>/se-toolkit-lab-7`.
 
