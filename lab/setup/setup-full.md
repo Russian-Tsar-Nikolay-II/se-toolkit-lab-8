@@ -188,10 +188,7 @@ See [tools](../../wiki/software-types.md#tool).
 
 #### 1.6.2. (UPD) Clone your fork
 
-1. [Clone your fork](../../wiki/git-vscode.md#clone-the-repository):
-
-   - Replace `<repo-url>` with [`<your-fork-url>`](../../wiki/github.md#your-fork-url).
-   - Replace `<repo-name>` with `se-toolkit-lab-7`.
+1. [Clone your lab repository fork](../../wiki/lab.md#clone-your-lab-repository-fork).
 
 ### 1.7. (UPD) Open the cloned repo and set up `VS Code` (LOCAL)
 
