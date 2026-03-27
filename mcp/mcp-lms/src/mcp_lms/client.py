@@ -1,12 +1,11 @@
-"""Async HTTP client, models, and formatters for the LMS backend API."""
+"""Async HTTP client and typed models for the LMS backend API."""
+
+from __future__ import annotations
+
+from typing import Any, TypeVar
 
 import httpx
 from pydantic import BaseModel
-
-
-# ---------------------------------------------------------------------------
-# Models
-# ---------------------------------------------------------------------------
 
 
 class HealthResult(BaseModel):
@@ -64,123 +63,131 @@ class SyncResult(BaseModel):
     total_records: int
 
 
-# ---------------------------------------------------------------------------
-# HTTP client
-# ---------------------------------------------------------------------------
+ModelT = TypeVar("ModelT", bound=BaseModel)
 
 
 class LMSClient:
     """Client for the LMS backend API."""
 
-    def __init__(self, base_url: str, api_key: str):
+    def __init__(
+        self,
+        base_url: str,
+        api_key: str,
+        *,
+        http_client: httpx.AsyncClient | None = None,
+        timeout: float = 10.0,
+    ) -> None:
         self.base_url = base_url.rstrip("/")
-        self._headers = {"Authorization": f"Bearer {api_key}"}
+        self._owns_client = http_client is None
+        self._http_client = http_client or httpx.AsyncClient(
+            base_url=self.base_url,
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=timeout,
+        )
 
-    def _client(self) -> httpx.AsyncClient:
-        return httpx.AsyncClient(headers=self._headers, timeout=10.0)
+    async def __aenter__(self) -> LMSClient:
+        return self
+
+    async def __aexit__(self, *_: object) -> None:
+        await self.aclose()
+
+    async def aclose(self) -> None:
+        if self._owns_client:
+            await self._http_client.aclose()
+
+    async def _request_json(
+        self,
+        method: str,
+        path: str,
+        *,
+        params: dict[str, str | int] | None = None,
+    ) -> Any:
+        response = await self._http_client.request(method, path, params=params)
+        response.raise_for_status()
+        return response.json()
+
+    async def _get_list(
+        self,
+        path: str,
+        model: type[ModelT],
+        *,
+        params: dict[str, str | int] | None = None,
+    ) -> list[ModelT]:
+        payload = await self._request_json("GET", path, params=params)
+        return [model.model_validate(item) for item in payload]
+
+    async def _get_model(
+        self,
+        path: str,
+        model: type[ModelT],
+        *,
+        params: dict[str, str | int] | None = None,
+    ) -> ModelT:
+        payload = await self._request_json("GET", path, params=params)
+        return model.model_validate(payload)
+
+    async def _post_model(self, path: str, model: type[ModelT]) -> ModelT:
+        payload = await self._request_json("POST", path)
+        return model.model_validate(payload)
 
     async def health_check(self) -> HealthResult:
-        async with self._client() as c:
-            try:
-                r = await c.get(f"{self.base_url}/items/")
-                r.raise_for_status()
-                items = [Item.model_validate(i) for i in r.json()]
-                return HealthResult(status="healthy", item_count=len(items))
-            except httpx.ConnectError:
-                return HealthResult(
-                    status="unhealthy", error=f"connection refused ({self.base_url})"
-                )
-            except httpx.HTTPStatusError as e:
-                return HealthResult(
-                    status="unhealthy", error=f"HTTP {e.response.status_code}"
-                )
-            except Exception as e:
-                return HealthResult(status="unhealthy", error=str(e))
+        try:
+            items = await self.get_items()
+            return HealthResult(status="healthy", item_count=len(items))
+        except httpx.ConnectError:
+            return HealthResult(
+                status="unhealthy", error=f"connection refused ({self.base_url})"
+            )
+        except httpx.HTTPStatusError as error:
+            return HealthResult(
+                status="unhealthy", error=f"HTTP {error.response.status_code}"
+            )
+        except Exception as error:
+            return HealthResult(status="unhealthy", error=str(error))
 
     async def get_items(self) -> list[Item]:
-        async with self._client() as c:
-            r = await c.get(f"{self.base_url}/items/")
-            r.raise_for_status()
-            return [Item.model_validate(i) for i in r.json()]
+        return await self._get_list("/items/", Item)
+
+    async def get_labs(self) -> list[Item]:
+        return [item for item in await self.get_items() if item.type == "lab"]
 
     async def get_learners(self) -> list[Learner]:
-        async with self._client() as c:
-            r = await c.get(f"{self.base_url}/learners/")
-            r.raise_for_status()
-            return [Learner.model_validate(i) for i in r.json()]
+        return await self._get_list("/learners/", Learner)
 
     async def get_pass_rates(self, lab: str) -> list[PassRate]:
-        async with self._client() as c:
-            r = await c.get(
-                f"{self.base_url}/analytics/pass-rates", params={"lab": lab}
-            )
-            r.raise_for_status()
-            return [PassRate.model_validate(i) for i in r.json()]
+        return await self._get_list(
+            "/analytics/pass-rates",
+            PassRate,
+            params={"lab": lab},
+        )
 
     async def get_timeline(self, lab: str) -> list[TimelineEntry]:
-        async with self._client() as c:
-            r = await c.get(f"{self.base_url}/analytics/timeline", params={"lab": lab})
-            r.raise_for_status()
-            return [TimelineEntry.model_validate(i) for i in r.json()]
+        return await self._get_list(
+            "/analytics/timeline",
+            TimelineEntry,
+            params={"lab": lab},
+        )
 
     async def get_groups(self, lab: str) -> list[GroupPerformance]:
-        async with self._client() as c:
-            r = await c.get(f"{self.base_url}/analytics/groups", params={"lab": lab})
-            r.raise_for_status()
-            return [GroupPerformance.model_validate(i) for i in r.json()]
+        return await self._get_list(
+            "/analytics/groups",
+            GroupPerformance,
+            params={"lab": lab},
+        )
 
     async def get_top_learners(self, lab: str, limit: int = 5) -> list[TopLearner]:
-        async with self._client() as c:
-            r = await c.get(
-                f"{self.base_url}/analytics/top-learners",
-                params={"lab": lab, "limit": limit},
-            )
-            r.raise_for_status()
-            return [TopLearner.model_validate(i) for i in r.json()]
+        return await self._get_list(
+            "/analytics/top-learners",
+            TopLearner,
+            params={"lab": lab, "limit": limit},
+        )
 
     async def get_completion_rate(self, lab: str) -> CompletionRate:
-        async with self._client() as c:
-            r = await c.get(
-                f"{self.base_url}/analytics/completion-rate", params={"lab": lab}
-            )
-            r.raise_for_status()
-            return CompletionRate.model_validate(r.json())
+        return await self._get_model(
+            "/analytics/completion-rate",
+            CompletionRate,
+            params={"lab": lab},
+        )
 
     async def sync_pipeline(self) -> SyncResult:
-        async with self._client() as c:
-            r = await c.post(f"{self.base_url}/pipeline/sync")
-            r.raise_for_status()
-            return SyncResult.model_validate(r.json())
-
-
-# ---------------------------------------------------------------------------
-# Formatters
-# ---------------------------------------------------------------------------
-
-
-def format_health(result: HealthResult) -> str:
-    if result.status == "healthy":
-        return f"\u2705 Backend is healthy. {result.item_count} items available."
-    return f"\u274c Backend error: {result.error or 'Unknown'}"
-
-
-def format_labs(items: list[Item]) -> str:
-    labs = sorted(
-        [i for i in items if i.type == "lab"],
-        key=lambda x: str(x.id),
-    )
-    if not labs:
-        return "\U0001f4ed No labs available."
-    text = "\U0001f4da Available labs:\n\n"
-    text += "\n".join(f"\u2022 {lab.title}" for lab in labs)
-    return text
-
-
-def format_scores(lab: str, rates: list[PassRate]) -> str:
-    if not rates:
-        return f"\U0001f4ed No scores found for {lab}."
-    text = f"\U0001f4ca Pass rates for {lab}:\n\n"
-    text += "\n".join(
-        f"\u2022 {r.task}: {r.avg_score:.1f}% ({r.attempts} attempts)" for r in rates
-    )
-    return text
+        return await self._post_model("/pipeline/sync", SyncResult)
